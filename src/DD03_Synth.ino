@@ -13,7 +13,7 @@ Add fixed frequency to Oscillators
 Add Randomization to all parameters
 Add Clock
 Add Velocity Control variables for all parameters
-Perform Perfomarnce tests for various control rates
+Perform Performance tests for various control rates
 Add 2k worth of features maybe delay or reverb? audio input??
 add another envelope
 add delay to envelopes
@@ -355,6 +355,7 @@ const int8_t *waveTable[22];
 
 void loop()
 {
+  handleMidi();
   audioHook();
 }
 
@@ -403,7 +404,7 @@ void setup()
 /// @brief Update the User Inputs and other CONTROL_RATE stuff
 void updateControl()
 {
-  handleMidi();
+  
   Voice.Envelope[0]->update();
   Voice.Envelope[1]->update();
   Voice.Envelope[2]->update();
