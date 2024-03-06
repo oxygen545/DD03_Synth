@@ -35,6 +35,9 @@ add delay to envelopes
 // #define PRINT_PC
 // #define SEND_MIDI
 // #define USE_SYSEX
+// #define USE_AFTERTOUCH
+// #define USE_CHANNEL_PRESSURE
+// #define USE_SYSEX
 // #define USE_UNHANDLED_MIDI
 
 #define NUM_OSCILLATORS 3
@@ -76,6 +79,7 @@ static const uint16_t EEPROM_SIZE = EEPROM.length();
 // zero based 0-15
 uint8_t midiTransmitChannel = 1;
 uint32_t MidiClock = 0;
+bool clockRunning = false;
 // unsigned long potData[5] = {0UL, 0UL, 0UL, 0UL, 0UL};
 uint32_t MIN_ATTACK = 0UL;     // ADSR Envelope
 uint32_t MAX_ATTACK = 1500UL;  // ADSR Envelope
@@ -1062,37 +1066,60 @@ void handleMidi()
 
   case 0xF:
     // Sysex Message
-
+    if (rx.byte1 == 0xFF)
     {
-      if (rx.byte1 == 0xFF)
-      {
 #ifdef USE_SYSEX
-        Serial.println("Got an FF");
+      Serial.println("Got an FF");
 #endif
-      }
-      else if (rx.byte1 == 0xF8)
+    }
+    else if (rx.byte1 == 0xF8)
+    {
+      // Clock Signal
+      if (clockRunning)
       {
-        // Clock Signal
         MidiClock++;
-        return;
+      }
+      return;
+    }
+    else if (rx.byte1 == 0xFA)
+    {
+      // Clock Start
+      MidiClock = 0;
+      clockRunning = true;
+    }
+    else if (rx.byte1 == 0xFB)
+    {
+      // Clock Continue/ Pause
+      if (clockRunning)
+      {
+        clockRunning = false;
       }
       else
       {
-#ifdef USE_SYSEX
-        Serial.print("SX:");
-        Serial.print(rx.header, HEX);
-        Serial.print(F(","));
-        Serial.print(rx.byte1, HEX);
-        Serial.print(F(","));
-        Serial.print(rx.byte2, HEX);
-        Serial.print(F(","));
-        Serial.println(rx.byte3, HEX);
-#endif
+        clockRunning = true;
       }
+    }
+    else if (rx.byte1 == 0xFC)
+    {
+      // Clock Stopped
+      clockRunning = false;
+    }
+    else
+    {
 #ifdef USE_SYSEX
-      Serial.flush();
+      Serial.print("SX:");
+      Serial.print(rx.header, HEX);
+      Serial.print(F(","));
+      Serial.print(rx.byte1, HEX);
+      Serial.print(F(","));
+      Serial.print(rx.byte2, HEX);
+      Serial.print(F(","));
+      Serial.println(rx.byte3, HEX);
 #endif
     }
+#ifdef USE_SYSEX
+    Serial.flush();
+#endif
     sysex(
         rx.byte1 & 0xF, // channel
         rx.byte2,       // control
