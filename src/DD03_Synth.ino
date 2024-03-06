@@ -105,8 +105,8 @@ struct VoiceData
   int8_t transpose = 0; // 0-127 = -24 to 24 notes (2 octaves)
   uint8_t wave_shape[3] = {0, 0, 0};
   uint8_t algorithm = 0;
-  bool hasRandom[3] = {false, false, false};
-  uint8_t rand[3] = {0, 0, 0};
+  bool hasRetrigger[3] = {false, false, false};
+  uint8_t velocityDepth[3] = {0, 0, 0};
   // Modulator
   byte mod_depth[3] = {0, 0, 0};
 
@@ -207,15 +207,7 @@ public:
         freqs[i] = mtof((float)((pitch + voiceData.transpose) + voiceData.tune[i])) * ((voiceData.coarse[i] + voiceData.fine[i] / 10000.f));
         break;
       }
-      if (voiceData.hasRandom[i])
-      {
-        // not implemented
-        Osc[i]->setFreq(freqs[i]);
-      }
-      else
-      {
-        Osc[i]->setFreq(freqs[i]);
-      }
+      Osc[i]->setFreq(freqs[i]);
     }
   }
 
@@ -227,21 +219,16 @@ public:
     setFreqs(pitch);
     for (int i = 0; i < NUM_OSCILLATORS; i++) // 3 Envelopes
     {
-      Envelope[i]->setAttackLevel((velocity * voiceData.attackLevel[i]) >> 7);
-
-      if (!Envelope[i]->playing())
-      {
-#if DEBUG_PRINT
-        Serial.println("ON");
-#endif
+      Envelope[i]->setAttackLevel((voiceData.attackLevel[i] * velocity) >> 7);
+      Envelope[i]->setDecayLevel((voiceData.decayLevel[i] * velocity) >> 7);
+      Envelope[i]->setSustainLevel((voiceData.sustainLevel[i] * velocity) >> 7);
+      Envelope[i]->setReleaseLevel((voiceData.releaseLevel[i] * velocity) >> 7);
+      if(voiceData.hasRetrigger[i]) {
         Envelope[i]->noteOn(true);
       }
       else
       {
         Envelope[i]->noteOn(false);
-#if DEBUG_PRINT
-        Serial.println("OFF");
-#endif
       }
     }
     keyDown[p] = true;
@@ -274,7 +261,14 @@ public:
   {
     for (uint8_t i = 0; i < NUM_OSCILLATORS; i++)
     {
-      Envelope[i]->setLevels(voiceData.attackLevel[i], voiceData.decayLevel[i], voiceData.sustainLevel[i], voiceData.releaseLevel[i]);
+      if (velocity)
+      {
+        Envelope[i]->setLevels((voiceData.attackLevel[i] * velocity) >> 7, (voiceData.decayLevel[i] * velocity) >> 7, (voiceData.sustainLevel[i] * velocity) >> 7, (voiceData.releaseLevel[i] * velocity) >> 7);
+      }
+      else
+      {
+        Envelope[i]->setLevels(voiceData.attackLevel[i], voiceData.decayLevel[i], voiceData.sustainLevel[i], voiceData.releaseLevel[i]);
+      }
     }
   };
 
@@ -404,7 +398,7 @@ void setup()
 /// @brief Update the User Inputs and other CONTROL_RATE stuff
 void updateControl()
 {
-  
+
   Voice.Envelope[0]->update();
   Voice.Envelope[1]->update();
   Voice.Envelope[2]->update();
@@ -634,8 +628,8 @@ void controlChange(byte channel, byte control, byte value)
     Voice.setTimes();
     break;
   case 18: // Envelope 0 Attack Level
-    Voice.voiceData.attackLevel[0] = value << 1;
-    Voice.setLevels();
+    Voice.voiceData.attackLevel[0] = value;
+    Voice.Envelope[0]->setAttackLevel(value);
     break;
   case 19: // Envelope 0 Decay Scaling
     Voice.voiceData.decayScale[0] = value;
@@ -646,8 +640,8 @@ void controlChange(byte channel, byte control, byte value)
     Voice.setTimes();
     break;
   case 21: // Envelope 0 Decay Level
-    Voice.voiceData.decayLevel[0] = value << 1;
-    Voice.setLevels();
+    Voice.voiceData.decayLevel[0] = value;
+    Voice.Envelope[0]->setDecayLevel(value);
     break;
   case 22: // Envelope 0 Sustain Scaling
     Voice.voiceData.sustainScale[0] = value;
@@ -658,8 +652,8 @@ void controlChange(byte channel, byte control, byte value)
     Voice.setTimes();
     break;
   case 24: // Envelope 0 Sustain Level
-    Voice.voiceData.sustainLevel[0] = value << 1;
-    Voice.setLevels();
+    Voice.voiceData.sustainLevel[0] = value;
+    Voice.Envelope[0]->setSustainLevel(value);
     break;
   case 25: // Envelope 0 Release Scaling
     Voice.voiceData.releaseScale[0] = value;
@@ -670,8 +664,8 @@ void controlChange(byte channel, byte control, byte value)
     Voice.setTimes();
     break;
   case 27: // Envelope 0 Release Level
-    Voice.voiceData.releaseLevel[0] = value << 1;
-    Voice.setLevels();
+    Voice.voiceData.releaseLevel[0] = value;
+    Voice.Envelope[0]->setReleaseLevel(value);
     break;
   case 28: // Envelope 1 Attack Scaling
     Voice.voiceData.attackScale[1] = value;
@@ -682,8 +676,8 @@ void controlChange(byte channel, byte control, byte value)
     Voice.setTimes();
     break;
   case 30: // Envelope 1 Attack Level
-    Voice.voiceData.attackLevel[1] = value << 1;
-    Voice.setLevels();
+    Voice.voiceData.attackLevel[1] = value;
+    Voice.Envelope[1]->setAttackLevel(value);
     break;
   case 31: // Envelope 1 Decay Scaling
     Voice.voiceData.decayScale[1] = value;
@@ -694,8 +688,8 @@ void controlChange(byte channel, byte control, byte value)
     Voice.setTimes();
     break;
   case 33: // Envelope 1 Decay Level
-    Voice.voiceData.decayLevel[1] = value << 1;
-    Voice.setLevels();
+    Voice.voiceData.decayLevel[1] = value;
+    Voice.Envelope[1]->setDecayLevel(value);
     break;
   case 34: // Envelope 1 Sustain Scaling
     Voice.voiceData.sustainScale[1] = value;
@@ -706,8 +700,8 @@ void controlChange(byte channel, byte control, byte value)
     Voice.setTimes();
     break;
   case 36: // Envelope 1 Sustain Level
-    Voice.voiceData.sustainLevel[1] = value << 1;
-    Voice.setLevels();
+    Voice.voiceData.sustainLevel[1] = value;
+    Voice.Envelope[1]->setSustainLevel(value);
     break;
   case 37: // Envelope 1 Release Scaling
     Voice.voiceData.releaseScale[1] = value;
@@ -718,8 +712,8 @@ void controlChange(byte channel, byte control, byte value)
     Voice.setTimes();
     break;
   case 39: // Envelope 1 Release Level
-    Voice.voiceData.releaseLevel[1] = value << 1;
-    Voice.setLevels();
+    Voice.voiceData.releaseLevel[1] = value;
+    Voice.Envelope[1]->setReleaseLevel(value);
     break;
   case 40: // Envelope 2 Attack Scaling
     Voice.voiceData.attackScale[2] = value;
@@ -730,8 +724,8 @@ void controlChange(byte channel, byte control, byte value)
     Voice.setTimes();
     break;
   case 42: // Envelope 2 Attack Level
-    Voice.voiceData.attackLevel[2] = value << 1;
-    Voice.setLevels();
+    Voice.voiceData.attackLevel[2] = value;
+    Voice.Envelope[2]->setAttackLevel(value);
     break;
   case 43: // Envelope 2 Decay Scaling
     Voice.voiceData.decayScale[2] = value;
@@ -742,8 +736,8 @@ void controlChange(byte channel, byte control, byte value)
     Voice.setTimes();
     break;
   case 45: // Envelope 2 Decay Level
-    Voice.voiceData.decayLevel[2] = value << 1;
-    Voice.setLevels();
+    Voice.voiceData.decayLevel[2] = value;
+    Voice.Envelope[2]->setDecayLevel(value);
     break;
   case 46: // Envelope 2 Sustain Scaling
     Voice.voiceData.sustainScale[2] = value;
@@ -754,8 +748,8 @@ void controlChange(byte channel, byte control, byte value)
     Voice.setTimes();
     break;
   case 48: // Envelope 2 Sustain Level
-    Voice.voiceData.sustainLevel[2] = value << 1;
-    Voice.setLevels();
+    Voice.voiceData.sustainLevel[2] = value;
+    Voice.Envelope[2]->setSustainLevel(value);
     break;
   case 49: // Envelope 2 Release Scaling
     Voice.voiceData.releaseScale[2] = value;
@@ -766,8 +760,8 @@ void controlChange(byte channel, byte control, byte value)
     Voice.setTimes();
     break;
   case 51: // Envelope 2 Release Level
-    Voice.voiceData.releaseLevel[2] = value << 1;
-    Voice.setLevels();
+    Voice.voiceData.releaseLevel[2] = value;
+    Voice.Envelope[2]->setReleaseLevel(value);
     break;
 
   case 52: // Oscillator 0 Depth
@@ -877,22 +871,24 @@ void controlChange(byte channel, byte control, byte value)
     Voice.start(Voice.channel, Voice.pitch, Voice.velocity);
     break;
   case 71:
-    Voice.voiceData.hasRandom[0] = value;
+    Voice.voiceData.hasRetrigger[0] = map(value, 0, 1, false, true);
     break;
   case 72:
-    Voice.voiceData.hasRandom[1] = value;
+    Voice.voiceData.hasRetrigger[1] = map(value, 0, 1, false, true);
+    ;
     break;
   case 73:
-    Voice.voiceData.hasRandom[2] = value;
+    Voice.voiceData.hasRetrigger[2] = map(value, 0, 1, false, true);
+    ;
     break;
   case 74:
-    Voice.voiceData.rand[0] = value;
+    Voice.voiceData.velocityDepth[0] = value;
     break;
   case 75:
-    Voice.voiceData.rand[1] = value;
+    Voice.voiceData.velocityDepth[1] = value;
     break;
   case 76:
-    Voice.voiceData.rand[2] = value;
+    Voice.voiceData.velocityDepth[2] = value;
     break;
   case 77:
     Voice.voiceData.transpose = map(value, 0, 127, -24, 24);
