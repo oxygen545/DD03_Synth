@@ -1,0 +1,4 @@
+{
+    "sketch": "src\\DD03_Synth.ino",
+    "board": "arduino:avr:leonardo"
+}
