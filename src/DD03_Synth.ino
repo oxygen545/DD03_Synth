@@ -82,13 +82,13 @@ uint32_t MidiClock = 0;
 bool clockRunning = false;
 // unsigned long potData[5] = {0UL, 0UL, 0UL, 0UL, 0UL};
 uint32_t MIN_ATTACK = 0UL;     // ADSR Envelope
-uint32_t MAX_ATTACK = 1500UL;  // ADSR Envelope
+uint32_t MAX_ATTACK = 127UL;  // ADSR Envelope
 uint32_t MIN_DECAY = 0UL;      // ADSR Envelope
-uint32_t MAX_DECAY = 1500UL;   // ADSR Envelope
+uint32_t MAX_DECAY = 127UL;   // ADSR Envelope
 uint32_t MIN_SUSTAIN = 1UL;    // ADSR Envelope
-uint32_t MAX_SUSTAIN = 1500UL; // ADSR Envelope
+uint32_t MAX_SUSTAIN = 127UL; // ADSR Envelope
 uint32_t MIN_RELEASE = 1UL;
-uint32_t MAX_RELEASE = 1500UL;
+uint32_t MAX_RELEASE = 127UL;
 bool keyDown[127];
 
 // DO NOT CHANGE UNLESS YOU WANT TO LOSE ALL THE PRESETS
@@ -423,7 +423,7 @@ int updateAudio()
     Signal[2] = Voice.Osc[2]->next() * ((env[2] * Voice.voiceData.mod_depth[2]) >> 7);
     Signal[1] = Voice.Osc[1]->next() * ((env[1] * Voice.voiceData.mod_depth[1]) >> 7);
     Signal[0] = Voice.Osc[0]->next() * ((env[0] * Voice.voiceData.mod_depth[0]) >> 7);
-    final = (int)((Signal[2] + Signal[1] + Signal[0]) >> 1);
+    final = (int)((Signal[2] + Signal[1] + Signal[0]));
     break;
 
   case 1: // (Osc2->Osc1 + Osc0) / 2
@@ -444,7 +444,7 @@ int updateAudio()
     Signal[2] = Voice.Osc[2]->next() * ((env[2] * Voice.voiceData.mod_depth[2]) >> 7);
     Signal[1] = Voice.Osc[1]->phMod(Signal[2]) * ((env[1] * Voice.voiceData.mod_depth[1]) >> 7);
     Signal[0] = Voice.Osc[0]->phMod(Signal[1]) * ((env[0] * Voice.voiceData.mod_depth[0]) >> 7);
-    final = (int)((Signal[2] + Signal[1] + Signal[0]) >> 1);
+    final = (int)((Signal[2] + Signal[1] + Signal[0]));
     break;
 
   case 4: // Osc2->Osc1->Osc0 + Osc2
@@ -465,7 +465,7 @@ int updateAudio()
     Signal[2] = Voice.Osc[2]->next() * ((env[2] * Voice.voiceData.mod_depth[2]) >> 7);
     Signal[1] = Voice.Osc[1]->next() * ((env[1] * Voice.voiceData.mod_depth[1]) >> 7);
     Signal[0] = Voice.Osc[0]->next() * ((env[0] * Voice.voiceData.mod_depth[0]) >> 7);
-    final = (int)((Signal[2] + Signal[1] + Signal[0]) >> 1);
+    final = (int)((Signal[2] + Signal[1] + Signal[0]));
     break;
   }
 
@@ -624,7 +624,7 @@ void controlChange(byte channel, byte control, byte value)
     Voice.setTimes();
     break;
   case 17: // Envelope 0 Attack Time
-    Voice.voiceData.attackTime[0] = map(value, 0, 127, MIN_ATTACK, MAX_ATTACK);
+    Voice.voiceData.attackTime[0] = value;
     Voice.setTimes();
     break;
   case 18: // Envelope 0 Attack Level
@@ -636,7 +636,7 @@ void controlChange(byte channel, byte control, byte value)
     Voice.setTimes();
     break;
   case 20: // Main Envelope Decay Time
-    Voice.voiceData.decayTime[0] = map(value, 0, 127, MIN_DECAY, MAX_DECAY);
+    Voice.voiceData.decayTime[0] = value;
     Voice.setTimes();
     break;
   case 21: // Envelope 0 Decay Level
@@ -648,7 +648,7 @@ void controlChange(byte channel, byte control, byte value)
     Voice.setTimes();
     break;
   case 23: // Main Envelope Sustain Time
-    Voice.voiceData.sustainTime[0] = map(value, 0, 127, MIN_SUSTAIN, MAX_SUSTAIN);
+    Voice.voiceData.sustainTime[0] = value;
     Voice.setTimes();
     break;
   case 24: // Envelope 0 Sustain Level
@@ -660,7 +660,7 @@ void controlChange(byte channel, byte control, byte value)
     Voice.setTimes();
     break;
   case 26: // Envelope 0 Main Envelope Release Time
-    Voice.voiceData.releaseTime[0] = map(value, 0, 127, MIN_RELEASE, MAX_RELEASE);
+    Voice.voiceData.releaseTime[0] = value;
     Voice.setTimes();
     break;
   case 27: // Envelope 0 Release Level
@@ -672,7 +672,7 @@ void controlChange(byte channel, byte control, byte value)
     Voice.setTimes();
     break;
   case 29: // Envelope 1 Attack Time
-    Voice.voiceData.attackTime[1] = map(value, 0, 127, MIN_ATTACK, MAX_ATTACK);
+    Voice.voiceData.attackTime[1] = value;
     Voice.setTimes();
     break;
   case 30: // Envelope 1 Attack Level
@@ -684,7 +684,7 @@ void controlChange(byte channel, byte control, byte value)
     Voice.setTimes();
     break;
   case 32: // Envelope 1 Decay Time
-    Voice.voiceData.decayTime[1] = map(value, 0, 127, MIN_DECAY, MAX_DECAY);
+    Voice.voiceData.decayTime[1] = value;
     Voice.setTimes();
     break;
   case 33: // Envelope 1 Decay Level
@@ -696,7 +696,7 @@ void controlChange(byte channel, byte control, byte value)
     Voice.setTimes();
     break;
   case 35: // Envelope 1 Sustain Time
-    Voice.voiceData.sustainTime[1] = map(value, 0, 127, MIN_SUSTAIN, MAX_SUSTAIN);
+    Voice.voiceData.sustainTime[1] = value;
     Voice.setTimes();
     break;
   case 36: // Envelope 1 Sustain Level
@@ -708,7 +708,7 @@ void controlChange(byte channel, byte control, byte value)
     Voice.setTimes();
     break;
   case 38: // Envelope 1 Release Time
-    Voice.voiceData.releaseTime[1] = map(value, 0, 127, MIN_RELEASE, MAX_RELEASE);
+    Voice.voiceData.releaseTime[1] = value;
     Voice.setTimes();
     break;
   case 39: // Envelope 1 Release Level
@@ -720,7 +720,7 @@ void controlChange(byte channel, byte control, byte value)
     Voice.setTimes();
     break;
   case 41: // Envelope 2 Attack Time
-    Voice.voiceData.attackTime[2] = map(value, 0, 127, MIN_ATTACK, MAX_ATTACK);
+    Voice.voiceData.attackTime[2] = value;
     Voice.setTimes();
     break;
   case 42: // Envelope 2 Attack Level
@@ -732,7 +732,7 @@ void controlChange(byte channel, byte control, byte value)
     Voice.setTimes();
     break;
   case 44: // Envelope 2 Decay Time
-    Voice.voiceData.decayTime[2] = map(value, 0, 127, MIN_DECAY, MAX_DECAY);
+    Voice.voiceData.decayTime[2] = value;
     Voice.setTimes();
     break;
   case 45: // Envelope 2 Decay Level
@@ -744,7 +744,7 @@ void controlChange(byte channel, byte control, byte value)
     Voice.setTimes();
     break;
   case 47: // Envelope 2 Sustain Time
-    Voice.voiceData.sustainTime[2] = map(value, 0, 127, MIN_SUSTAIN, MAX_SUSTAIN);
+    Voice.voiceData.sustainTime[2] = value;
     Voice.setTimes();
     break;
   case 48: // Envelope 2 Sustain Level
@@ -756,7 +756,7 @@ void controlChange(byte channel, byte control, byte value)
     Voice.setTimes();
     break;
   case 50: // Envelope 2 Release Time
-    Voice.voiceData.releaseTime[2] = map(value, 0, 127, MIN_RELEASE, MAX_RELEASE);
+    Voice.voiceData.releaseTime[2] = value;
     Voice.setTimes();
     break;
   case 51: // Envelope 2 Release Level
@@ -1140,40 +1140,6 @@ void handleMidi()
   }
 }
 
-/*
-struct VoiceData
-{
-  uint8_t index = 0;
-  uint8_t version[3]{ROM_MAJOR_NUM, ROM_MINOR_NUM, ROM_REVISION_NUM};
-  uint8_t scale[3] = {0, 0, 0};
-  int8_t tune[3] = {0, 0, 0};
-  float coarse[3] = {1, 1, 1};
-  float fine[3] = {0, 0, 0};
-  // Carrier
-  uint8_t carrier_shape = 0;
-  uint8_t algorithm = 0;
-  bool hasphase[3] = {false, false, false};
-  uint8_t phase[3] = {0, 0, 0};
-  // Modulator
-  byte mod_depth[3] = {0, 0, 0};
-  uint8_t wave_shape[3] = {0, 0, 0};
-
-  // Envelope
-  uint8_t attackScale[3] = {1, 1, 1};
-  int16_t decayScale[3] = {1, 1, 1};
-  int16_t sustainScale[3] = {1, 1, 1};
-  int16_t releaseScale[3] = {1, 1, 1};
-
-  unsigned int attackTime[3] = {0, 0, 0};
-  unsigned int decayTime[3] = {0, 0, 0};
-  unsigned long sustainTime[3] = {MAX_SUSTAIN, MAX_SUSTAIN, MAX_SUSTAIN};
-  unsigned int releaseTime[3] = {0, 0, 0};
-  byte attackLevel[3] = {120, 120, 120};
-  byte decayLevel[3] = {120, 120, 120};
-  byte sustainLevel[3] = {120, 120, 120};
-  byte releaseLevel[3] = {0, 0, 0};
-};
-*/
 void PrintVoiceInfo()
 {
 #ifdef PRINT_VOICEINFO
@@ -1205,9 +1171,9 @@ void PrintVoiceInfo()
       Serial.print(F(","));
       Serial.print(Voice.voiceData.fine[i], 2);
       Serial.print(F(","));
-      Serial.print(Voice.voiceData.hasphase[i]);
+      Serial.print(Voice.voiceData.hasRetrigger[i]);
       Serial.print(F(","));
-      Serial.print(Voice.voiceData.phase[i]);
+      Serial.print(Voice.voiceData.velocityDepth[i]);
       Serial.print(F(","));
       Serial.print(Voice.voiceData.attackScale[i]);
       Serial.print(F(","));
