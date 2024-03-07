@@ -11,17 +11,17 @@
 TODO:
 Add fixed frequency to Oscillators
 Add Randomization to all parameters
-Add Clock
+Add Clock functionality
 Add Velocity Control variables for all parameters
 Perform Performance tests for various control rates
-Add 2k worth of features maybe delay or reverb? audio input??
+Add features maybe delay or reverb? audio input??
 add another envelope
 add delay to envelopes
 *************************************************/
 
 #ifdef CONTROL_RATE
 #undef CONTROL_RATE
-#define CONTROL_RATE 128
+#define CONTROL_RATE 256
 #endif
 
 //
@@ -66,11 +66,11 @@ add delay to envelopes
 /*
 /            CONSTANTS
 */
-static const uint8_t POT0_PIN = A0;
-static const uint8_t POT1_PIN = A1;
-static const uint8_t POT2_PIN = A2;
-static const uint8_t POT3_PIN = A3;
-static const uint8_t POT4_PIN = A6;
+// static const uint8_t POT0_PIN = A0;
+// static const uint8_t POT1_PIN = A1;
+// static const uint8_t POT2_PIN = A2;
+// static const uint8_t POT3_PIN = A3;
+// static const uint8_t POT4_PIN = A6;
 static const uint16_t EEPROM_SIZE = EEPROM.length();
 /*
 /            GLOBALS
@@ -81,11 +81,11 @@ uint8_t midiTransmitChannel = 1;
 uint32_t MidiClock = 0;
 bool clockRunning = false;
 // unsigned long potData[5] = {0UL, 0UL, 0UL, 0UL, 0UL};
-uint32_t MIN_ATTACK = 0UL;     // ADSR Envelope
+uint32_t MIN_ATTACK = 0UL;    // ADSR Envelope
 uint32_t MAX_ATTACK = 127UL;  // ADSR Envelope
-uint32_t MIN_DECAY = 0UL;      // ADSR Envelope
+uint32_t MIN_DECAY = 0UL;     // ADSR Envelope
 uint32_t MAX_DECAY = 127UL;   // ADSR Envelope
-uint32_t MIN_SUSTAIN = 1UL;    // ADSR Envelope
+uint32_t MIN_SUSTAIN = 1UL;   // ADSR Envelope
 uint32_t MAX_SUSTAIN = 127UL; // ADSR Envelope
 uint32_t MIN_RELEASE = 1UL;
 uint32_t MAX_RELEASE = 127UL;
@@ -223,7 +223,8 @@ public:
       Envelope[i]->setDecayLevel((voiceData.decayLevel[i] * velocity) >> 7);
       Envelope[i]->setSustainLevel((voiceData.sustainLevel[i] * velocity) >> 7);
       Envelope[i]->setReleaseLevel((voiceData.releaseLevel[i] * velocity) >> 7);
-      if(voiceData.hasRetrigger[i]) {
+      if (voiceData.hasRetrigger[i])
+      {
         Envelope[i]->noteOn(true);
       }
       else
@@ -273,33 +274,44 @@ public:
   };
 
   void FirstInit()
-  { // erases everything in eeprom, saves t he current voice to preset 0, sets the rom version
+  {
 #ifdef DEBUG_SAVE
     Serial.println("FirstInit");
 #endif
     uint16_t l = EEPROM.length();
-    for (uint16_t i = 0; i < l; i++)
+    // Checks ROM version
+    if (EEPROM.read(ROM_MAJOR_ADDR) == ROM_MAJOR_NUM)
     {
+      if (EEPROM.read(ROM_MINOR_ADDR) == ROM_MINOR_NUM)
+      {
+        if (EEPROM.read(ROM_REVISION_ADDR) == ROM_REVISION_NUM)
+        {
+          // Success load a preset and return
+          load(0);
+          return;
+        }
+      }
+    }
+    // failed ROM version check
+    for (uint16_t i = 0; i < l; i++)
+    { // erase eeprom
       EEPROM.write(i, 0);
     }
+    // Set ROM version
     EEPROM.write(ROM_MAJOR_ADDR, ROM_MAJOR_NUM);
     EEPROM.write(ROM_MINOR_ADDR, ROM_MINOR_NUM);
     EEPROM.write(ROM_REVISION_ADDR, ROM_REVISION_NUM);
     EEPROM.write(ROM_NUM_PRESET_ADDR, MAX_BANKS);
     EEPROM.put(ROM_FIRST_PRESET_ADDR, voiceData);
-    for (uint8_t i = 0; i < MAX_BANKS; i++)
-    {
-      save(i);
-    }
   };
 
   bool load(uint8_t idx)
   {
-    int Addr = ROM_FIRST_PRESET_ADDR;                // the address we will use to store the data
-    uint8_t majVer = EEPROM.read(ROM_MAJOR_ADDR);    // get the version number for the preset for future versioning issues
-    uint8_t minVer = EEPROM.read(ROM_MINOR_ADDR);    // get the version number for the preset for future versioning issues
-    uint8_t revVer = EEPROM.read(ROM_REVISION_ADDR); // get the version number for the preset for future versioning issues
-    Addr = ROM_FIRST_PRESET_ADDR + (idx * presetSize);
+
+    // uint8_t majVer = EEPROM.read(ROM_MAJOR_ADDR);    // get the version number for the preset for future versioning issues
+    // uint8_t minVer = EEPROM.read(ROM_MINOR_ADDR);    // get the version number for the preset for future versioning issues
+    // uint8_t revVer = EEPROM.read(ROM_REVISION_ADDR); // get the version number for the preset for future versioning issues
+    int Addr = ROM_FIRST_PRESET_ADDR + (idx * presetSize); // the address we will use to store the data
     EEPROM.get(Addr, voiceData);
     setWaveshape(voiceData.wave_shape[0], 0);
     setWaveshape(voiceData.wave_shape[1], 1);
@@ -320,12 +332,12 @@ public:
 #ifdef DEBUG_SAVE
     Serial.println("saveFcn");
 #endif
-    int Addr = ROM_FIRST_PRESET_ADDR;                // the address we will use to store the data
-    uint8_t majver = EEPROM.read(ROM_MAJOR_ADDR);    // get the version number for the preset for future versioning issues
-    uint8_t minver = EEPROM.read(ROM_MINOR_ADDR);    // get the version number for the preset for future versioning issues
-    uint8_t revver = EEPROM.read(ROM_REVISION_ADDR); // get the version number for the preset for future versioning issues
-    Addr = ROM_FIRST_PRESET_ADDR + (idx * presetSize);
-    voiceData.index = idx; // set this Prest to this index because we are saving this preset we will set the current voicedata index to this new one, saving makes it current
+
+    uint8_t majver = EEPROM.read(ROM_MAJOR_ADDR);          // get the version number for the preset for future versioning issues
+    uint8_t minver = EEPROM.read(ROM_MINOR_ADDR);          // get the version number for the preset for future versioning issues
+    uint8_t revver = EEPROM.read(ROM_REVISION_ADDR);       // get the version number for the preset for future versioning issues
+    int Addr = ROM_FIRST_PRESET_ADDR + (idx * presetSize); // the address we will use to store the data
+    voiceData.index = idx;                                 // set this Prest to this index because we are saving this preset we will set the current voicedata index to this new one, saving makes it current
     voiceData.version[0] = ROM_MAJOR_NUM;
     voiceData.version[1] = ROM_MINOR_NUM;
     voiceData.version[2] = ROM_REVISION_NUM;
@@ -349,13 +361,12 @@ const int8_t *waveTable[22];
 
 void loop()
 {
-  handleMidi();
   audioHook();
 }
 
 void setup()
 {
-  Serial.begin(115200); // set up the Serial output so we can look at the levels
+  Serial.begin(115200); // set up the Serial output so we can look at the debug stuff
   // pinMode(POT0_PIN, INPUT);
   // pinMode(POT1_PIN, INPUT);
   // pinMode(POT2_PIN, INPUT);
@@ -398,23 +409,20 @@ void setup()
 /// @brief Update the User Inputs and other CONTROL_RATE stuff
 void updateControl()
 {
-
+  handleMidi();
   Voice.Envelope[0]->update();
   Voice.Envelope[1]->update();
   Voice.Envelope[2]->update();
 }
 
-// int t = 1;
-
 /// @brief Update AUDIO_RATE stuff and send out the audio
 /// @return 16-bit Audio
-
 int updateAudio()
 {
   Q15n16 Signal[3] = {0, 0, 0};
   int final = 0;
   unsigned char env[3] = {Voice.Envelope[0]->next(), Voice.Envelope[1]->next(), Voice.Envelope[2]->next()};
-  unsigned long current_phase[3] = {Voice.Osc[0]->getPhaseFractional(), Voice.Osc[1]->getPhaseFractional(), Voice.Osc[2]->getPhaseFractional()};
+  // unsigned long current_phase[3] = {Voice.Osc[0]->getPhaseFractional(), Voice.Osc[1]->getPhaseFractional(), Voice.Osc[2]->getPhaseFractional()};
   // ******************************************** PHASE STUFF ********************************************
   // ALGO
   switch (Voice.voiceData.algorithm)
@@ -487,7 +495,6 @@ void setWaveshape(uint8_t shape, uint8_t id)
  * @c
  * @param pitch
  * @return const char*
-
 const char *pitch_name(byte pitch)
 {
   static const char *names[] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
@@ -500,7 +507,6 @@ const char *pitch_name(byte pitch)
  * @c
  * @param pitch
  * @return int
-
 int pitch_octave(byte pitch)
 {
   return (pitch / 12) - 1;
@@ -621,11 +627,11 @@ void controlChange(byte channel, byte control, byte value)
     // Envelope 0
   case 16: // Envelope 0 Attack Scaling
     Voice.voiceData.attackScale[0] = value;
-    Voice.setTimes();
+    Voice.Envelope[0]->setAttackTime(Voice.voiceData.attackTime[0] * pow(10, value));
     break;
   case 17: // Envelope 0 Attack Time
     Voice.voiceData.attackTime[0] = value;
-    Voice.setTimes();
+    Voice.Envelope[0]->setAttackTime(Voice.voiceData.attackTime[0] * pow(10, value));
     break;
   case 18: // Envelope 0 Attack Level
     Voice.voiceData.attackLevel[0] = value;
@@ -633,11 +639,11 @@ void controlChange(byte channel, byte control, byte value)
     break;
   case 19: // Envelope 0 Decay Scaling
     Voice.voiceData.decayScale[0] = value;
-    Voice.setTimes();
+    Voice.Envelope[0]->setDecayTime(Voice.voiceData.decayTime[0] * pow(10, value));
     break;
   case 20: // Main Envelope Decay Time
     Voice.voiceData.decayTime[0] = value;
-    Voice.setTimes();
+    Voice.Envelope[0]->setDecayTime(Voice.voiceData.decayTime[0] * pow(10, value));
     break;
   case 21: // Envelope 0 Decay Level
     Voice.voiceData.decayLevel[0] = value;
@@ -645,11 +651,11 @@ void controlChange(byte channel, byte control, byte value)
     break;
   case 22: // Envelope 0 Sustain Scaling
     Voice.voiceData.sustainScale[0] = value;
-    Voice.setTimes();
+    Voice.Envelope[0]->setSustainTime(Voice.voiceData.sustainTime[0] * pow(10, value));
     break;
   case 23: // Main Envelope Sustain Time
     Voice.voiceData.sustainTime[0] = value;
-    Voice.setTimes();
+    Voice.Envelope[0]->setSustainTime(Voice.voiceData.sustainTime[0] * pow(10, value));
     break;
   case 24: // Envelope 0 Sustain Level
     Voice.voiceData.sustainLevel[0] = value;
@@ -657,11 +663,11 @@ void controlChange(byte channel, byte control, byte value)
     break;
   case 25: // Envelope 0 Release Scaling
     Voice.voiceData.releaseScale[0] = value;
-    Voice.setTimes();
+    Voice.Envelope[0]->setReleaseTime(Voice.voiceData.releaseTime[0] * pow(10, value));
     break;
   case 26: // Envelope 0 Main Envelope Release Time
     Voice.voiceData.releaseTime[0] = value;
-    Voice.setTimes();
+    Voice.Envelope[0]->setReleaseTime(Voice.voiceData.releaseTime[0] * pow(10, value));
     break;
   case 27: // Envelope 0 Release Level
     Voice.voiceData.releaseLevel[0] = value;
@@ -669,11 +675,11 @@ void controlChange(byte channel, byte control, byte value)
     break;
   case 28: // Envelope 1 Attack Scaling
     Voice.voiceData.attackScale[1] = value;
-    Voice.setTimes();
+    Voice.Envelope[1]->setAttackTime(Voice.voiceData.attackTime[1] * pow(10, value));
     break;
   case 29: // Envelope 1 Attack Time
     Voice.voiceData.attackTime[1] = value;
-    Voice.setTimes();
+    Voice.Envelope[1]->setAttackTime(Voice.voiceData.attackTime[1] * pow(10, value));
     break;
   case 30: // Envelope 1 Attack Level
     Voice.voiceData.attackLevel[1] = value;
@@ -681,11 +687,11 @@ void controlChange(byte channel, byte control, byte value)
     break;
   case 31: // Envelope 1 Decay Scaling
     Voice.voiceData.decayScale[1] = value;
-    Voice.setTimes();
+    Voice.Envelope[1]->setDecayTime(Voice.voiceData.decayTime[1] * pow(10, value));
     break;
   case 32: // Envelope 1 Decay Time
     Voice.voiceData.decayTime[1] = value;
-    Voice.setTimes();
+    Voice.Envelope[1]->setDecayTime(Voice.voiceData.decayTime[1] * pow(10, value));
     break;
   case 33: // Envelope 1 Decay Level
     Voice.voiceData.decayLevel[1] = value;
@@ -693,11 +699,11 @@ void controlChange(byte channel, byte control, byte value)
     break;
   case 34: // Envelope 1 Sustain Scaling
     Voice.voiceData.sustainScale[1] = value;
-    Voice.setTimes();
+    Voice.Envelope[1]->setSustainTime(Voice.voiceData.sustainTime[1] * pow(10, value));
     break;
   case 35: // Envelope 1 Sustain Time
     Voice.voiceData.sustainTime[1] = value;
-    Voice.setTimes();
+    Voice.Envelope[1]->setSustainTime(Voice.voiceData.sustainTime[1] * pow(10, value));
     break;
   case 36: // Envelope 1 Sustain Level
     Voice.voiceData.sustainLevel[1] = value;
@@ -705,11 +711,11 @@ void controlChange(byte channel, byte control, byte value)
     break;
   case 37: // Envelope 1 Release Scaling
     Voice.voiceData.releaseScale[1] = value;
-    Voice.setTimes();
+    Voice.Envelope[1]->setReleaseTime(Voice.voiceData.releaseTime[1] * pow(10, value));
     break;
   case 38: // Envelope 1 Release Time
     Voice.voiceData.releaseTime[1] = value;
-    Voice.setTimes();
+    Voice.Envelope[1]->setReleaseTime(Voice.voiceData.releaseTime[1] * pow(10, value));
     break;
   case 39: // Envelope 1 Release Level
     Voice.voiceData.releaseLevel[1] = value;
@@ -717,11 +723,11 @@ void controlChange(byte channel, byte control, byte value)
     break;
   case 40: // Envelope 2 Attack Scaling
     Voice.voiceData.attackScale[2] = value;
-    Voice.setTimes();
+    Voice.Envelope[2]->setAttackTime(Voice.voiceData.attackTime[2] * pow(10, value));
     break;
   case 41: // Envelope 2 Attack Time
     Voice.voiceData.attackTime[2] = value;
-    Voice.setTimes();
+    Voice.Envelope[2]->setAttackTime(Voice.voiceData.attackTime[2] * pow(10, value));
     break;
   case 42: // Envelope 2 Attack Level
     Voice.voiceData.attackLevel[2] = value;
@@ -729,11 +735,11 @@ void controlChange(byte channel, byte control, byte value)
     break;
   case 43: // Envelope 2 Decay Scaling
     Voice.voiceData.decayScale[2] = value;
-    Voice.setTimes();
+    Voice.Envelope[2]->setDecayTime(Voice.voiceData.decayTime[2] * pow(10, value));
     break;
   case 44: // Envelope 2 Decay Time
     Voice.voiceData.decayTime[2] = value;
-    Voice.setTimes();
+    Voice.Envelope[2]->setDecayTime(Voice.voiceData.decayTime[2] * pow(10, value));
     break;
   case 45: // Envelope 2 Decay Level
     Voice.voiceData.decayLevel[2] = value;
@@ -741,11 +747,11 @@ void controlChange(byte channel, byte control, byte value)
     break;
   case 46: // Envelope 2 Sustain Scaling
     Voice.voiceData.sustainScale[2] = value;
-    Voice.setTimes();
+    Voice.Envelope[2]->setSustainTime(Voice.voiceData.sustainTime[2] * pow(10, value));
     break;
   case 47: // Envelope 2 Sustain Time
     Voice.voiceData.sustainTime[2] = value;
-    Voice.setTimes();
+    Voice.Envelope[2]->setSustainTime(Voice.voiceData.sustainTime[2] * pow(10, value));
     break;
   case 48: // Envelope 2 Sustain Level
     Voice.voiceData.sustainLevel[2] = value;
@@ -753,17 +759,16 @@ void controlChange(byte channel, byte control, byte value)
     break;
   case 49: // Envelope 2 Release Scaling
     Voice.voiceData.releaseScale[2] = value;
-    Voice.setTimes();
+    Voice.Envelope[2]->setReleaseTime(Voice.voiceData.releaseTime[2] * pow(10, value));
     break;
   case 50: // Envelope 2 Release Time
     Voice.voiceData.releaseTime[2] = value;
-    Voice.setTimes();
+    Voice.Envelope[2]->setReleaseTime(Voice.voiceData.releaseTime[2] * pow(10, value));
     break;
   case 51: // Envelope 2 Release Level
     Voice.voiceData.releaseLevel[2] = value;
     Voice.Envelope[2]->setReleaseLevel(value);
     break;
-
   case 52: // Oscillator 0 Depth
     Voice.voiceData.mod_depth[0] = value;
     break;
@@ -773,7 +778,6 @@ void controlChange(byte channel, byte control, byte value)
   case 54: // Oscillator 2 Depth
     Voice.voiceData.mod_depth[2] = value;
     break;
-
   case 55: // Oscillator 0 Tune
     Voice.voiceData.tune[0] = (int8_t)map(value, 0, 127, -7, 7);
     Voice.setFreqs(Voice.pitch);
@@ -786,7 +790,6 @@ void controlChange(byte channel, byte control, byte value)
     Voice.voiceData.tune[2] = (int8_t)map(value, 0, 127, -7, 7);
     Voice.setFreqs(Voice.pitch);
     break;
-
   case 58: // Oscillator 0 Coarse
     Voice.voiceData.coarse[0] = map(value, 0, 127, 0, 32);
     if (Voice.voiceData.coarse[0] == 0)
@@ -811,7 +814,6 @@ void controlChange(byte channel, byte control, byte value)
     }
     Voice.setFreqs(Voice.pitch);
     break;
-
   case 61: // Oscillator 0 fine
     Voice.voiceData.fine[0] = ((float)map(value, 0, 127, 0, 99) / 100.f);
     Voice.setFreqs(Voice.pitch);
@@ -824,7 +826,6 @@ void controlChange(byte channel, byte control, byte value)
     Voice.voiceData.fine[2] = ((float)map(value, 0, 127, 0, 99) / 100.f);
     Voice.setFreqs(Voice.pitch);
     break;
-
   case 64: // Oscillator 0 Coarse Scale
     Voice.voiceData.scale[0] = value;
     Voice.setFreqs(Voice.pitch);
@@ -837,7 +838,6 @@ void controlChange(byte channel, byte control, byte value)
     Voice.voiceData.scale[2] = value;
     Voice.setFreqs(Voice.pitch);
     break;
-
   case 67: // Audio Output Algorithm
     Voice.voiceData.algorithm = value;
     break;
@@ -875,11 +875,9 @@ void controlChange(byte channel, byte control, byte value)
     break;
   case 72:
     Voice.voiceData.hasRetrigger[1] = map(value, 0, 1, false, true);
-    ;
     break;
   case 73:
     Voice.voiceData.hasRetrigger[2] = map(value, 0, 1, false, true);
-    ;
     break;
   case 74:
     Voice.voiceData.velocityDepth[0] = value;
