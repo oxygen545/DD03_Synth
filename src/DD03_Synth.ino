@@ -333,9 +333,9 @@ public:
     Serial.println("saveFcn");
 #endif
 
-    uint8_t majver = EEPROM.read(ROM_MAJOR_ADDR);          // get the version number for the preset for future versioning issues
-    uint8_t minver = EEPROM.read(ROM_MINOR_ADDR);          // get the version number for the preset for future versioning issues
-    uint8_t revver = EEPROM.read(ROM_REVISION_ADDR);       // get the version number for the preset for future versioning issues
+    //uint8_t majver = EEPROM.read(ROM_MAJOR_ADDR);          // get the version number for the preset for future versioning issues
+    //uint8_t minver = EEPROM.read(ROM_MINOR_ADDR);          // get the version number for the preset for future versioning issues
+    //uint8_t revver = EEPROM.read(ROM_REVISION_ADDR);       // get the version number for the preset for future versioning issues
     int Addr = ROM_FIRST_PRESET_ADDR + (idx * presetSize); // the address we will use to store the data
     voiceData.index = idx;                                 // set this Prest to this index because we are saving this preset we will set the current voicedata index to this new one, saving makes it current
     voiceData.version[0] = ROM_MAJOR_NUM;
