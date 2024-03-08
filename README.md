@@ -5,11 +5,10 @@ also recently changed to using the AdventureKid Wavetables I found that had been
 
 Any questions please ask me. <Oxygen545@protonmail.com>
 
-*** Building it yourself ***
+**Building it yourself**
 if you are building it yourself Load up the sketch in the arduino IDE and solder an audio jack to pins 9 and ground respectively.. Tip to pin 9 and Sheild to Ground
 
-
-OK. So it's a 3 Oscillator 3 Envelope synthesizer. I didn't want to implement the time and energy into this project to use hardware controls for the parameter inputs. 
+OK. So it's a 3 Oscillator 3 Envelope synthesizer. I didn't want to implement the time and energy into this project to use hardware controls for the parameter inputs.
 Instead I've opted to use an application called TouchOSC. available for download at <https://hexler.net/touchosc>
 
 the Trial version works fine on a computer or laptop. For use on a tablet or phone, you will need to purchase the appropriate application.
