@@ -42,9 +42,9 @@ add delay to envelopes
 
 #define NUM_OSCILLATORS 3
 #define APP_NAME F("DD-3")
-#define ROM_MAJOR_NUM 0
-#define ROM_MINOR_NUM 1
-#define ROM_REVISION_NUM 0
+#define ROM_MAJOR_NUM 3
+#define ROM_MINOR_NUM 3
+#define ROM_REVISION_NUM 1
 
 // EEPROM Major Version Number
 #define ROM_MAJOR_ADDR 0UL
