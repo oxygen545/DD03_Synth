@@ -77,6 +77,7 @@ static const uint16_t EEPROM_SIZE = EEPROM.length();
 */
 // RESEARCH NOTE  not sure how to send to All Channels via OMNI
 // zero based 0-15
+uint8_t midiReceiveChannel = 0;
 uint8_t midiTransmitChannel = 1;
 uint32_t MidiClock = 0;
 bool clockRunning = false;
@@ -333,9 +334,9 @@ public:
     Serial.println("saveFcn");
 #endif
 
-    //uint8_t majver = EEPROM.read(ROM_MAJOR_ADDR);          // get the version number for the preset for future versioning issues
-    //uint8_t minver = EEPROM.read(ROM_MINOR_ADDR);          // get the version number for the preset for future versioning issues
-    //uint8_t revver = EEPROM.read(ROM_REVISION_ADDR);       // get the version number for the preset for future versioning issues
+    // uint8_t majver = EEPROM.read(ROM_MAJOR_ADDR);          // get the version number for the preset for future versioning issues
+    // uint8_t minver = EEPROM.read(ROM_MINOR_ADDR);          // get the version number for the preset for future versioning issues
+    // uint8_t revver = EEPROM.read(ROM_REVISION_ADDR);       // get the version number for the preset for future versioning issues
     int Addr = ROM_FIRST_PRESET_ADDR + (idx * presetSize); // the address we will use to store the data
     voiceData.index = idx;                                 // set this Prest to this index because we are saving this preset we will set the current voicedata index to this new one, saving makes it current
     voiceData.version[0] = ROM_MAJOR_NUM;
@@ -527,26 +528,38 @@ void noteOn(byte channel, byte pitch, byte velocity)
   MidiUSB.sendMIDI(noteOn); // transmit the midi noteOn to the rest of the System on the Prescribed Channel
   MidiUSB.flush();
 #endif
+  if (channel != midiReceiveChannel)
+  {
+#ifdef DEBUG_PRINT
+    Serial.println(channel);
+    Serial.flush();
+#endif
+    return;
+  }
   if (velocity == 0)
   {
     noteOff(channel, pitch, 64);
     return;
   }
   Voice.start(channel, pitch, velocity);
-  // PrintVoiceInfo();
+  PrintVoiceInfo();
 }
 
 void noteOff(byte channel, byte pitch, byte velocity)
 {
+
 #ifdef SEND_MIDI
   midiEventPacket_t noteOff = {0x08, 0x80 | midiTransmitChannel, pitch, velocity};
   MidiUSB.sendMIDI(noteOff);
   MidiUSB.flush();
 #endif
+  if (channel != midiReceiveChannel)
+  {
+    return;
+  }
   if (Voice.channel == channel && Voice.pitch == pitch)
   {
     Voice.stop(pitch);
-    return;
   }
 }
 
@@ -558,6 +571,10 @@ void programChange(byte channel, byte program, byte value)
   MidiUSB.sendMIDI(event);
   MidiUSB.flush();
 #endif
+  if (channel != midiReceiveChannel)
+  {
+    return;
+  }
 #ifdef PRINT_PC
   Serial.print("PC:");
   Serial.print(program);
@@ -577,6 +594,10 @@ void controlChange(byte channel, byte control, byte value)
   MidiUSB.sendMIDI(event);
   MidiUSB.flush();
 #endif
+  if (channel != midiReceiveChannel)
+  {
+    return;
+  }
 #ifdef PRINT_CC
   Serial.print("CC:");
   Serial.print(control);
@@ -867,7 +888,7 @@ void controlChange(byte channel, byte control, byte value)
   case 69:
     PrintVoiceInfo();
     break;
-  case 70:
+  case 70: // replay Note
     Voice.start(Voice.channel, Voice.pitch, Voice.velocity);
     break;
   case 71:
@@ -891,6 +912,23 @@ void controlChange(byte channel, byte control, byte value)
   case 77:
     Voice.voiceData.transpose = map(value, 0, 127, -24, 24);
     break;
+  case 78: // set Receive Channel
+#ifdef DEBUG_PRINT
+    Serial.print("oldRx:");
+    Serial.print(midiReceiveChannel);
+    Serial.print(" newRx:");
+#endif
+    if (value > 15)
+    {
+      midiReceiveChannel = 0;
+      break;
+    }
+    midiReceiveChannel = value;
+#ifdef DEBUG_PRINT
+    Serial.println(midiReceiveChannel);
+#endif
+    break;
+
   case 119: // reset
     resetFunc();
     break;
@@ -908,18 +946,20 @@ void controlChange(byte channel, byte control, byte value)
   }
 
 #ifdef PRINT_CC
-
   {
     Serial.flush();
   }
 #endif
 }
 
-// BROKEN **********************
 void pitchBend(byte channel, byte lsb, byte msb)
 {
   float value = (msb << 8) + lsb;
   float freqs[3] = {0, 0, 0};
+  if (channel != midiReceiveChannel)
+  {
+    return;
+  }
 // Pitch Down
 // 0-8191
 
@@ -972,7 +1012,11 @@ void pitchBend(byte channel, byte lsb, byte msb)
 
 void sysex(byte channel, byte lsb, byte msb)
 {
-#ifdef USE_SYSEX
+  if (channel != midiReceiveChannel)
+  {
+    return;
+  }
+#ifdef DEBUG_PRINT
   // handle Sysex Message here
   Serial.print("Sysx:");
   Serial.print("chan:");
@@ -1060,149 +1104,150 @@ void handleMidi()
     break;
 
   case 0xF:
+#ifdef USE_SYSEX
     // Sysex Message
     if (rx.byte1 == 0xFF)
     {
-#ifdef USE_SYSEX
+#ifdef DEBUG_PRINT
       Serial.println("Got an FF");
-#endif
-    }
-    else if (rx.byte1 == 0xF8)
-    {
-      // Clock Signal
-      if (clockRunning)
+#endif }
+      else if (rx.byte1 == 0xF8)
       {
-        MidiClock++;
+        // Clock Signal
+        if (clockRunning)
+        {
+          MidiClock++;
+        }
+        return;
       }
-      return;
-    }
-    else if (rx.byte1 == 0xFA)
-    {
-      // Clock Start
-      MidiClock = 0;
-      clockRunning = true;
-    }
-    else if (rx.byte1 == 0xFB)
-    {
-      // Clock Continue/ Pause
-      if (clockRunning)
+      else if (rx.byte1 == 0xFA)
       {
+        // Clock Start
+        MidiClock = 0;
+        clockRunning = true;
+      }
+      else if (rx.byte1 == 0xFB)
+      {
+        // Clock Continue/ Pause
+        if (clockRunning)
+        {
+          clockRunning = false;
+        }
+        else
+        {
+          clockRunning = true;
+        }
+      }
+      else if (rx.byte1 == 0xFC)
+      {
+        // Clock Stopped
         clockRunning = false;
       }
       else
       {
-        clockRunning = true;
+#ifdef DEBUG_PRINT
+        Serial.print("SX:");
+        Serial.print(rx.header, HEX);
+        Serial.print(F(","));
+        Serial.print(rx.byte1, HEX);
+        Serial.print(F(","));
+        Serial.print(rx.byte2, HEX);
+        Serial.print(F(","));
+        Serial.println(rx.byte3, HEX);
+#endif
       }
-    }
-    else if (rx.byte1 == 0xFC)
-    {
-      // Clock Stopped
-      clockRunning = false;
-    }
-    else
-    {
-#ifdef USE_SYSEX
-      Serial.print("SX:");
-      Serial.print(rx.header, HEX);
-      Serial.print(F(","));
-      Serial.print(rx.byte1, HEX);
-      Serial.print(F(","));
-      Serial.print(rx.byte2, HEX);
-      Serial.print(F(","));
-      Serial.println(rx.byte3, HEX);
+#ifdef DEBUG_PRINT
+      Serial.flush();
 #endif
-    }
-#ifdef USE_SYSEX
-    Serial.flush();
+      sysex(
+          rx.byte1 & 0xF, // channel
+          rx.byte2,       // control
+          rx.byte3        // value
+      );
 #endif
-    sysex(
-        rx.byte1 & 0xF, // channel
-        rx.byte2,       // control
-        rx.byte3        // value
-    );
-    break;
+      break;
 
-  default:
+    default:
 #ifdef USE_UNHANDLED_MIDI
-    Serial.print("Unhandled MIDI message: ");
-    Serial.print(rx.header, HEX);
-    Serial.print("-");
-    Serial.print(rx.byte1, HEX);
-    Serial.print("-");
-    Serial.print(rx.byte2, HEX);
-    Serial.print("-");
-    Serial.println(rx.byte3, HEX);
-    Serial.flush();
+      Serial.print("Unhandled MIDI message: ");
+      Serial.print(rx.header, HEX);
+      Serial.print("-");
+      Serial.print(rx.byte1, HEX);
+      Serial.print("-");
+      Serial.print(rx.byte2, HEX);
+      Serial.print("-");
+      Serial.println(rx.byte3, HEX);
+      Serial.flush();
 #endif
-    break;
+      break;
+    }
   }
-}
 
-void PrintVoiceInfo()
-{
+  void PrintVoiceInfo()
+  {
 #ifdef PRINT_VOICEINFO
 
-  {
-    Serial.println(APP_NAME);
-    Serial.print(Voice.voiceData.index);
-    Serial.print(F(","));
-    Serial.print(Voice.voiceData.version[0]);
-    Serial.print(F(","));
-    Serial.print(Voice.voiceData.version[1]);
-    Serial.print(F(","));
-    Serial.print(Voice.voiceData.version[2]);
-    Serial.print(F(","));
-    Serial.print(F(","));
-    Serial.print(Voice.voiceData.algorithm);
-    Serial.print(F(","));
-    for (uint8_t i = 0; i < NUM_OSCILLATORS; i++)
     {
-      Serial.print(Voice.voiceData.wave_shape[i]);
+      Serial.println(APP_NAME);
+      Serial.print(Voice.voiceData.index);
       Serial.print(F(","));
-      Serial.print(Voice.voiceData.mod_depth[i]);
+      Serial.print(Voice.voiceData.version[0]);
       Serial.print(F(","));
-      Serial.print(Voice.voiceData.tune[i]);
+      Serial.print(Voice.voiceData.version[1]);
       Serial.print(F(","));
-      Serial.print(Voice.voiceData.scale[i]);
+      Serial.print(Voice.voiceData.version[2]);
       Serial.print(F(","));
-      Serial.print(Voice.voiceData.coarse[i], 2);
       Serial.print(F(","));
-      Serial.print(Voice.voiceData.fine[i], 2);
+      Serial.print(Voice.voiceData.algorithm);
       Serial.print(F(","));
-      Serial.print(Voice.voiceData.hasRetrigger[i]);
-      Serial.print(F(","));
-      Serial.print(Voice.voiceData.velocityDepth[i]);
-      Serial.print(F(","));
-      Serial.print(Voice.voiceData.attackScale[i]);
-      Serial.print(F(","));
-      Serial.print(Voice.voiceData.attackTime[i]);
-      Serial.print(F(","));
-      Serial.print(Voice.voiceData.attackLevel[i]);
-      Serial.print(F(","));
-      Serial.print(Voice.voiceData.decayScale[i]);
-      Serial.print(F(","));
-      Serial.print(Voice.voiceData.decayTime[i]);
-      Serial.print(F(","));
-      Serial.print(Voice.voiceData.decayLevel[i]);
-      Serial.print(F(","));
-      Serial.print(Voice.voiceData.sustainScale[i]);
-      Serial.print(F(","));
-      Serial.print(Voice.voiceData.sustainTime[i]);
-      Serial.print(F(","));
-      Serial.print(Voice.voiceData.sustainLevel[i]);
-      Serial.print(F(","));
-      Serial.print(Voice.voiceData.releaseScale[i]);
-      Serial.print(F(","));
-      Serial.print(Voice.voiceData.releaseTime[i]);
-      Serial.print(F(","));
-      Serial.print(Voice.voiceData.releaseLevel[i]);
-      if (i != 2)
+      for (uint8_t i = 0; i < NUM_OSCILLATORS; i++)
       {
+        Serial.print(Voice.voiceData.wave_shape[i]);
         Serial.print(F(","));
+        Serial.print(Voice.voiceData.mod_depth[i]);
+        Serial.print(F(","));
+        Serial.print(Voice.voiceData.tune[i]);
+        Serial.print(F(","));
+        Serial.print(Voice.voiceData.scale[i]);
+        Serial.print(F(","));
+        Serial.print(Voice.voiceData.coarse[i], 2);
+        Serial.print(F(","));
+        Serial.print(Voice.voiceData.fine[i], 2);
+        Serial.print(F(","));
+        Serial.print(Voice.voiceData.hasRetrigger[i]);
+        Serial.print(F(","));
+        Serial.print(Voice.voiceData.velocityDepth[i]);
+        Serial.print(F(","));
+        Serial.print(Voice.voiceData.attackScale[i]);
+        Serial.print(F(","));
+        Serial.print(Voice.voiceData.attackTime[i]);
+        Serial.print(F(","));
+        Serial.print(Voice.voiceData.attackLevel[i]);
+        Serial.print(F(","));
+        Serial.print(Voice.voiceData.decayScale[i]);
+        Serial.print(F(","));
+        Serial.print(Voice.voiceData.decayTime[i]);
+        Serial.print(F(","));
+        Serial.print(Voice.voiceData.decayLevel[i]);
+        Serial.print(F(","));
+        Serial.print(Voice.voiceData.sustainScale[i]);
+        Serial.print(F(","));
+        Serial.print(Voice.voiceData.sustainTime[i]);
+        Serial.print(F(","));
+        Serial.print(Voice.voiceData.sustainLevel[i]);
+        Serial.print(F(","));
+        Serial.print(Voice.voiceData.releaseScale[i]);
+        Serial.print(F(","));
+        Serial.print(Voice.voiceData.releaseTime[i]);
+        Serial.print(F(","));
+        Serial.print(Voice.voiceData.releaseLevel[i]);
+        if (i != 2)
+        {
+          Serial.print(F(","));
+        }
       }
+      Serial.println();
+      Serial.flush();
     }
-    Serial.println();
-    Serial.flush();
-  }
 #endif
-}
+  }
