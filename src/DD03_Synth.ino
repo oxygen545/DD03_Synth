@@ -107,7 +107,7 @@ struct VoiceData
   uint8_t wave_shape[3] = {0, 0, 0};
   uint8_t algorithm = 0;
   bool hasRetrigger[3] = {false, false, false};
-  uint8_t velocityDepth[3] = {0, 0, 0};
+  uint8_t phase_shift[3] = {0, 0, 0};
   // Modulator
   byte mod_depth[3] = {0, 0, 0};
 
@@ -422,9 +422,13 @@ int updateAudio()
 {
   Q15n16 Signal[3] = {0, 0, 0};
   int final = 0;
-  unsigned char env[3] = {Voice.Envelope[0]->next(), Voice.Envelope[1]->next(), Voice.Envelope[2]->next()};
-  // unsigned long current_phase[3] = {Voice.Osc[0]->getPhaseFractional(), Voice.Osc[1]->getPhaseFractional(), Voice.Osc[2]->getPhaseFractional()};
+  unsigned char env[NUM_OSCILLATORS] = {Voice.Envelope[0]->next(), Voice.Envelope[1]->next(), Voice.Envelope[2]->next()};
   // ******************************************** PHASE STUFF ********************************************
+  unsigned long current_phase[NUM_OSCILLATORS] = {Voice.Osc[0]->getPhaseFractional(), Voice.Osc[1]->getPhaseFractional(), Voice.Osc[2]->getPhaseFractional()};
+  for(uint8_t i = 0;i<NUM_OSCILLATORS;i++)
+  {
+      Voice.Osc[i]->setPhaseFractional(current_phase[i] + (Voice.voiceData.phase_shift[i] * (NUM_CELLS/127)));
+  }
   // ALGO
   switch (Voice.voiceData.algorithm)
   {
@@ -477,7 +481,7 @@ int updateAudio()
     final = (int)((Signal[2] + Signal[1] + Signal[0]));
     break;
   }
-
+  //final = 0;
   return MonoOutput::from16Bit(final);
 }
 
@@ -901,13 +905,13 @@ void controlChange(byte channel, byte control, byte value)
     Voice.voiceData.hasRetrigger[2] = map(value, 0, 1, false, true);
     break;
   case 74:
-    Voice.voiceData.velocityDepth[0] = value;
+    Voice.voiceData.phase_shift[0] = value;
     break;
   case 75:
-    Voice.voiceData.velocityDepth[1] = value;
+    Voice.voiceData.phase_shift[1] = value;
     break;
   case 76:
-    Voice.voiceData.velocityDepth[2] = value;
+    Voice.voiceData.phase_shift[2] = value;
     break;
   case 77:
     Voice.voiceData.transpose = map(value, 0, 127, -24, 24);
