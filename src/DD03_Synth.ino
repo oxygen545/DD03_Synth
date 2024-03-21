@@ -424,12 +424,12 @@ int updateAudio()
   int final = 0;
   unsigned char env[NUM_OSCILLATORS] = {Voice.Envelope[0]->next(), Voice.Envelope[1]->next(), Voice.Envelope[2]->next()};
   // ******************************************** PHASE STUFF ********************************************
-  unsigned long current_phase[NUM_OSCILLATORS] = {Voice.Osc[0]->getPhaseFractional(), Voice.Osc[1]->getPhaseFractional(), Voice.Osc[2]->getPhaseFractional()};
   for(uint8_t i = 0;i<NUM_OSCILLATORS;i++)
   {
-      Voice.Osc[i]->setPhaseFractional(current_phase[i] + (Voice.voiceData.phase_shift[i] * (NUM_CELLS/127)));
+      Voice.Osc[i]->setPhaseFractional(Voice.Osc[i]->getPhaseFractional() + (Voice.voiceData.phase_shift[i] * (NUM_CELLS/127)));
   }
-  // ALGO
+  
+   // ******************************************** ALGORITHM STUFF ********************************************
   switch (Voice.voiceData.algorithm)
   {
   case 0: // (Osc0 + Osc1 + Osc2) / 3
