@@ -21,7 +21,7 @@ add delay to envelopes
 
 #ifdef CONTROL_RATE
 #undef CONTROL_RATE
-#define CONTROL_RATE 256
+#define CONTROL_RATE 2048
 #endif
 
 //
@@ -312,6 +312,11 @@ public:
     // uint8_t majVer = EEPROM.read(ROM_MAJOR_ADDR);    // get the version number for the preset for future versioning issues
     // uint8_t minVer = EEPROM.read(ROM_MINOR_ADDR);    // get the version number for the preset for future versioning issues
     // uint8_t revVer = EEPROM.read(ROM_REVISION_ADDR); // get the version number for the preset for future versioning issues
+    if (MAX_BANKS <= idx)
+    {
+      // Load Failed idx to large
+      return;
+    }
     int Addr = ROM_FIRST_PRESET_ADDR + (idx * presetSize); // the address we will use to store the data
     EEPROM.get(Addr, voiceData);
     setWaveshape(voiceData.wave_shape[0], 0);
@@ -424,12 +429,12 @@ int updateAudio()
   int final = 0;
   unsigned char env[NUM_OSCILLATORS] = {Voice.Envelope[0]->next(), Voice.Envelope[1]->next(), Voice.Envelope[2]->next()};
   // ******************************************** PHASE STUFF ********************************************
-  for(uint8_t i = 0;i<NUM_OSCILLATORS;i++)
+  for (uint8_t i = 0; i < NUM_OSCILLATORS; i++)
   {
-      Voice.Osc[i]->setPhaseFractional(Voice.Osc[i]->getPhaseFractional() + (Voice.voiceData.phase_shift[i] * (NUM_CELLS/127)));
+    Voice.Osc[i]->setPhaseFractional(Voice.Osc[i]->getPhaseFractional() + (Voice.voiceData.phase_shift[i] * (NUM_CELLS / 127)));
   }
-  
-   // ******************************************** ALGORITHM STUFF ********************************************
+
+  // ******************************************** ALGORITHM STUFF ********************************************
   switch (Voice.voiceData.algorithm)
   {
   case 0: // (Osc0 + Osc1 + Osc2) / 3
@@ -481,7 +486,7 @@ int updateAudio()
     final = (int)((Signal[2] + Signal[1] + Signal[0]));
     break;
   }
-  //final = 0;
+  // final = 0;
   return MonoOutput::from16Bit(final);
 }
 
@@ -587,7 +592,6 @@ void programChange(byte channel, byte program, byte value)
   Serial.print(", val:");
   Serial.println(value);
 #endif
-  Voice.load(program);
 }
 
 void controlChange(byte channel, byte control, byte value)
@@ -890,7 +894,7 @@ void controlChange(byte channel, byte control, byte value)
 #endif
     break;
   case 69:
-    PrintVoiceInfo();
+    Voice.load(value);
     break;
   case 70: // replay Note
     Voice.start(Voice.channel, Voice.pitch, Voice.velocity);
