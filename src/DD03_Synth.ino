@@ -315,7 +315,7 @@ public:
     if (MAX_BANKS <= idx)
     {
       // Load Failed idx to large
-      return;
+      return false;
     }
     int Addr = ROM_FIRST_PRESET_ADDR + (idx * presetSize); // the address we will use to store the data
     EEPROM.get(Addr, voiceData);
