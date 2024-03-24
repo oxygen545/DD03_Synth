@@ -894,7 +894,7 @@ void controlChange(byte channel, byte control, byte value)
 #endif
     break;
   case 69:
-    Voice.load(value);
+    //Voice.load(value);
     break;
   case 70: // replay Note
     Voice.start(Voice.channel, Voice.pitch, Voice.velocity);
