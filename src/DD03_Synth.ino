@@ -640,13 +640,13 @@ void controlChange(byte channel, byte control, byte value)
     Voice.save(value);
     break;
   case 13: // FX 1 (Carrier Shape)
-    setWaveshape(value, 0);
+    setWaveshape(map(value, 0, 127, 0, NUM_WAVETABLES - 1), 0);
     break;
   case 14: // FX 2 (Modulator 0 Shape)
-    setWaveshape(value, 1);
+    setWaveshape(map(value, 0, 127, 0, NUM_WAVETABLES - 1), 1);
     break;
   case 15: // Modulator 1 Shape
-    setWaveshape(value, 2);
+    setWaveshape(map(value, 0, 127, 0, NUM_WAVETABLES - 1), 2);
     break;
     /*********************************
      *    Envelope Parameters

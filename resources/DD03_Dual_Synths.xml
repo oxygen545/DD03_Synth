@@ -4662,7 +4662,7 @@ end]]></value>
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[16]]></default>
+<default><![CDATA[21]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -4900,7 +4900,7 @@ end]]></value>
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[24]]></default>
+<default><![CDATA[47]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -6340,9 +6340,9 @@ end]]></value>
     -- 1st Synth Page
     if (self.parent.parent.parent.children.EnabledRadio_1.values.x == 1) then
       -- print('Synth 1 Enabled')
-      MidiTxChannel = tonumber(self.parent.parent.children.MidiChannel_1.values.text)
+      MidiTxChannel = tonumber(self.parent.parent.parent.children.MidiChannel_1.values.text)
       MidiTx_1 = true;
-      if(tonumber(self.parent.parent.children.MidiThru_1.values.x) == 1) then
+      if(tonumber(self.parent.parent.parent.children.MidiThru_1.values.x) == 1) then
         -- Midi Thru Enabled
         -- print('Thru On')
         MidiTx_2 = true;
@@ -7915,7 +7915,7 @@ end]]></value>
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[16]]></default>
+<default><![CDATA[7]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -8034,7 +8034,7 @@ end]]></value>
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[10]]></default>
+<default><![CDATA[13]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -8272,7 +8272,7 @@ end]]></value>
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[82]]></default>
+<default><![CDATA[11]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -11168,7 +11168,7 @@ end]]></value>
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[11]]></default>
+<default><![CDATA[9]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -11287,7 +11287,7 @@ end]]></value>
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[12]]></default>
+<default><![CDATA[0]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -20724,46 +20724,48 @@ end]]></value>
 <property type='s'>
 <key><![CDATA[script]]></key>
 <value><![CDATA[function onValueChanged(key)
-  local MidiTxChannel = tonumber(self.parent.children.MidiChannel_1.values.text)
-  local MidiThru_1 = false
-  local MidiThru_2 = false
-
-  if (self.parent.children.EnabledRadio_1.values.x == 1) then
-    -- This Synth is Enabled
-    -- print('Synth Enabled')
-    if(tonumber(self.parent.children.SynthLabel_1.properties.tag) == 1) then
-      -- First Page
-      MidiThru_1 = true;
-      --print('Synth',self.parent.children.EnabledRadio_1.values.x)
+  local MidiTxChannel = 0;
+  local MidiTx_1 = false
+  local MidiTx_2 = false
+  local isEnabled = false
+  if(tonumber(self.parent.children.SynthLabel.properties.tag) == 1) then
+    -- 1st Synth Page
+    if (self.parent.children.EnabledRadio_1.values.x == 1) then
+       print('Synth 1 Enabled')
+      MidiTxChannel = tonumber(self.parent.children.MidiChannel_1.values.text)
+      MidiTx_1 = true;
       if(tonumber(self.parent.children.MidiThru_1.values.x) == 1) then
         -- Midi Thru Enabled
-        -- print('Thru On')
-        MidiThru_2 = true;
+         print('Thru On')
+        MidiTx_2 = true;
       else
         -- Midi Thru Disabled
-        -- print('thru Off')
+         print('thru Off')
         MidiThru_2 = false;
-      end
-    else
-      -- Second Page
-      -- print('Synth',self.parent.children.EnabledRadio_1.values.x)
-      MidiThru_2 = true;
-      if(tonumber(self.parent.children.MidiThru_1.values.x) == 1) then
-        -- Midi Thru Enabled
-        -- print('Thru On')
-        MidiThru_1 = true;
-      else
-        -- Midi Thru Disabled
-        -- print('Thru Off')
-        MidiThru_1 = false;
       end
     end
   else
-    -- print('Synth Disabled')
+    -- 2nd Synth Page
+    if (self.parent.children.EnabledRadio_2.values.x == 1) then
+       print('Synth 2 Enabled')
+      MidiTxChannel = tonumber(self.parent.children.MidiChannel_2.values.text)
+      MidiTx_2 = true;
+      if(tonumber(self.parent.children.MidiThru_2.values.x) == 1) then
+        -- Midi Thru Enabled
+         print('Thru On')
+        MidiTx_1 = true;
+      else
+        -- Midi Thru Disabled
+         print('Thru Off')
+        MidiTx_1 = false;
+      end
+    else
+      print('Synth 2 Disabled')
+    end
   end
   if(key == 'x') then 
     -- print('CC',self.properties.tag,':',self.values.x, MidiThru_1, MidiThru_2)
-    sendMIDI({175 + MidiTxChannel, self.properties.tag, self.values.x}, {true, false, false, MidiThru_1, MidiThru_2 })
+    sendMIDI({175 + MidiTxChannel, self.properties.tag, self.values.x}, {true, false, false, MidiTx_1, MidiTx_2 })
   end
 end]]></value>
 </property>
@@ -20868,47 +20870,48 @@ end]]></value>
 <property type='s'>
 <key><![CDATA[script]]></key>
 <value><![CDATA[function onValueChanged(key)
-
-  local MidiTxChannel = tonumber(self.parent.children.MidiChannel_1.values.text)
-  local MidiThru_1 = false
-  local MidiThru_2 = false
-  
-  if (self.parent.children.EnabledRadio_1.values.x == 1) then
-    -- This Synth is Enabled
-    print('Synth Enabled')
-    if(tonumber(self.parent.children.SynthLabel_1.properties.tag) == 1) then
-      -- First Page
-      MidiThru_1 = true;
-      print('Synth',self.parent.children.EnabledRadio_1.values.x)
+  local MidiTxChannel = 0;
+  local MidiTx_1 = false
+  local MidiTx_2 = false
+  local isEnabled = false
+  if(tonumber(self.parent.children.SynthLabel.properties.tag) == 1) then
+    -- 1st Synth Page
+    if (self.parent.children.EnabledRadio_1.values.x == 1) then
+       print('Synth 1 Enabled')
+      MidiTxChannel = tonumber(self.parent.children.MidiChannel_1.values.text)
+      MidiTx_1 = true;
       if(tonumber(self.parent.children.MidiThru_1.values.x) == 1) then
         -- Midi Thru Enabled
-        print('Thru On')
-        MidiThru_2 = true;
+         print('Thru On')
+        MidiTx_2 = true;
       else
         -- Midi Thru Disabled
-        print('thru Off')
+         print('thru Off')
         MidiThru_2 = false;
-      end
-    else
-      -- Second Page
-      print('Synth',self.parent.children.EnabledRadio_1.values.x)
-      MidiThru_2 = true;
-      if(tonumber(self.parent.children.MidiThru_1.values.x) == 1) then
-        -- Midi Thru Enabled
-        print('Thru On')
-        MidiThru_1 = true;
-      else
-        -- Midi Thru Disabled
-        print('Thru Off')
-        MidiThru_1 = false;
       end
     end
   else
-    print('Synth Disabled')
+    -- 2nd Synth Page
+    if (self.parent.children.EnabledRadio_2.values.x == 1) then
+       print('Synth 2 Enabled')
+      MidiTxChannel = tonumber(self.parent.children.MidiChannel_2.values.text)
+      MidiTx_2 = true;
+      if(tonumber(self.parent.children.MidiThru_2.values.x) == 1) then
+        -- Midi Thru Enabled
+         print('Thru On')
+        MidiTx_1 = true;
+      else
+        -- Midi Thru Disabled
+         print('Thru Off')
+        MidiTx_1 = false;
+      end
+    else
+      print('Synth 2 Disabled')
+    end
   end
-  if(key=='x') then 
-    print('CC',self.properties.tag,':',self.values.x, MidiThru_1, MidiThru_2)
-    sendMIDI({175 + MidiTxChannel, self.properties.tag, self.values.x}, {true, false, false, MidiThru_1, MidiThru_2 })
+  if(key == 'x') then 
+    -- print('CC',self.properties.tag,':',self.values.x, MidiThru_1, MidiThru_2)
+    sendMIDI({175 + MidiTxChannel, self.properties.tag, self.values.x}, {true, false, false, MidiTx_1, MidiTx_2 })
   end
 end]]></value>
 </property>
@@ -21053,7 +21056,7 @@ end]]></value>
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[1]]></default>
+<default><![CDATA[0]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -21172,7 +21175,7 @@ end]]></value>
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[0]]></default>
+<default><![CDATA[8]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -22230,7 +22233,7 @@ end]]></value>
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[2]]></default>
+<default><![CDATA[0]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -22825,7 +22828,7 @@ end]]></value>
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[64]]></default>
+<default><![CDATA[50]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -22944,7 +22947,7 @@ end]]></value>
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[65]]></default>
+<default><![CDATA[52]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -23063,7 +23066,7 @@ end]]></value>
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[68]]></default>
+<default><![CDATA[51]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -30797,7 +30800,7 @@ end]]></value>
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[10]]></default>
+<default><![CDATA[91]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -30916,7 +30919,7 @@ end]]></value>
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[10]]></default>
+<default><![CDATA[8]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -31035,7 +31038,7 @@ end]]></value>
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[25]]></default>
+<default><![CDATA[9]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -34050,7 +34053,7 @@ end]]></value>
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[10]]></default>
+<default><![CDATA[24]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -34169,7 +34172,7 @@ end]]></value>
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[10]]></default>
+<default><![CDATA[8]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -34407,7 +34410,7 @@ end]]></value>
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[61]]></default>
+<default><![CDATA[11]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -37303,7 +37306,7 @@ end]]></value>
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[27]]></default>
+<default><![CDATA[37]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -37422,7 +37425,7 @@ end]]></value>
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[9]]></default>
+<default><![CDATA[12]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -37660,7 +37663,7 @@ end]]></value>
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[28]]></default>
+<default><![CDATA[61]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -39103,7 +39106,7 @@ end]]></value>
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[190]]></default>
+<default><![CDATA[0]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -41849,7 +41852,7 @@ end]]></value>
   end
   if(key == 'x') then 
     -- print('CC',self.properties.tag,':', 6, MidiTx_1, MidiTx_2)
-    sendMIDI({175 + MidiTxChannel, self.properties.tag, self.values.x * 127}, {true, false, false, MidiTx_1, MidiTx_2 })
+    sendMIDI({175 + MidiTxChannel, self.properties.tag, 6}, {true, false, false, MidiTx_1, MidiTx_2 })
   end
 end]]></value>
 </property>
@@ -47191,7 +47194,7 @@ end]]></value>
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[2]]></default>
+<default><![CDATA[0]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -47310,7 +47313,7 @@ end]]></value>
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[0]]></default>
+<default><![CDATA[8]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -48368,7 +48371,7 @@ end]]></value>
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[3]]></default>
+<default><![CDATA[0]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -48487,7 +48490,7 @@ end]]></value>
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[5]]></default>
+<default><![CDATA[0]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -48963,7 +48966,7 @@ end]]></value>
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[95]]></default>
+<default><![CDATA[0]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -49082,7 +49085,7 @@ end]]></value>
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[88]]></default>
+<default><![CDATA[0]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -49201,7 +49204,7 @@ end]]></value>
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[64]]></default>
+<default><![CDATA[0]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
