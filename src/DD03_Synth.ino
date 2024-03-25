@@ -24,9 +24,7 @@ add delay to envelopes
 #define CONTROL_RATE 2048
 #endif
 
-//
 //           DEFINES
-//
 // #define FIRST_INIT 1
 // #define DEBUG_PRINT 1
 // #define DEBUG_SAVE
@@ -109,7 +107,7 @@ struct VoiceData
   bool hasRetrigger[3] = {false, false, false};
   uint8_t phase_shift[3] = {0, 0, 0};
   // Modulator
-  byte mod_depth[3] = {0, 0, 0};
+  uint8_t mod_depth[3] = {0, 0, 0};
 
   // Envelope
   uint8_t attackScale[3] = {1, 1, 1};
@@ -117,14 +115,14 @@ struct VoiceData
   int16_t sustainScale[3] = {1, 1, 1};
   int16_t releaseScale[3] = {1, 1, 1};
 
-  unsigned int attackTime[3] = {0, 0, 0};
-  unsigned int decayTime[3] = {0, 0, 0};
-  unsigned long sustainTime[3] = {MAX_SUSTAIN, MAX_SUSTAIN, MAX_SUSTAIN};
-  unsigned int releaseTime[3] = {0, 0, 0};
-  byte attackLevel[3] = {127, 127, 127};
-  byte decayLevel[3] = {127, 127, 127};
-  byte sustainLevel[3] = {127, 127, 127};
-  byte releaseLevel[3] = {0, 0, 0};
+  ulong attackTime[3] = {0, 0, 0};
+  ulong decayTime[3] = {0, 0, 0};
+  ulong sustainTime[3] = {MAX_SUSTAIN, MAX_SUSTAIN, MAX_SUSTAIN};
+  ulong releaseTime[3] = {0, 0, 0};
+  uint8_t attackLevel[3] = {127, 127, 127};
+  uint8_t decayLevel[3] = {127, 127, 127};
+  uint8_t sustainLevel[3] = {127, 127, 127};
+  uint8_t releaseLevel[3] = {0, 0, 0};
 };
 
 static const unsigned long presetSize = sizeof(VoiceData);
@@ -202,10 +200,10 @@ public:
         freqs[i] = mtof((float)((pitch + voiceData.transpose) + voiceData.tune[i])) * ((voiceData.coarse[i] + voiceData.fine[i]) / 100.f);
         break;
       case 3:
-        freqs[i] = mtof((float)((pitch + voiceData.transpose) + voiceData.tune[i])) * ((voiceData.coarse[i] + voiceData.fine[i] / 1000.f));
+        freqs[i] = mtof((float)((pitch + voiceData.transpose) + voiceData.tune[i])) * ((voiceData.coarse[i] + voiceData.fine[i]) / 1000.f);
         break;
       case 4:
-        freqs[i] = mtof((float)((pitch + voiceData.transpose) + voiceData.tune[i])) * ((voiceData.coarse[i] + voiceData.fine[i] / 10000.f));
+        freqs[i] = mtof((float)((pitch + voiceData.transpose) + voiceData.tune[i])) * ((voiceData.coarse[i] + voiceData.fine[i]) / 10000.f);
         break;
       }
       Osc[i]->setFreq(freqs[i]);
@@ -894,7 +892,7 @@ void controlChange(byte channel, byte control, byte value)
 #endif
     break;
   case 69:
-    //Voice.load(value);
+    // Voice.load(value);
     break;
   case 70: // replay Note
     Voice.start(Voice.channel, Voice.pitch, Voice.velocity);
