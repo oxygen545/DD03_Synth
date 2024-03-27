@@ -654,7 +654,7 @@ void controlChange(byte channel, byte control, byte value)
     // Envelope 0
   case 16: // Envelope 0 Attack Scaling
     Voice.voiceData.attackScale[0] = value;
-    Voice.Envelope[0]->setAttackTime(Voice.voiceData.attackTime[0] * pow(10, value));
+    Voice.Envelope[0]->setAttackTime(Voice.voiceData.attackTime[0] * pow(10, Voice.voiceData.attackScale[0]));
     break;
   case 17: // Envelope 0 Attack Time
     Voice.voiceData.attackTime[0] = value;
@@ -666,7 +666,7 @@ void controlChange(byte channel, byte control, byte value)
     break;
   case 19: // Envelope 0 Decay Scaling
     Voice.voiceData.decayScale[0] = value;
-    Voice.Envelope[0]->setDecayTime(Voice.voiceData.decayTime[0] * pow(10, value));
+    Voice.Envelope[0]->setDecayTime(Voice.voiceData.decayTime[0] * pow(10, Voice.voiceData.decayScale[0]));
     break;
   case 20: // Main Envelope Decay Time
     Voice.voiceData.decayTime[0] = value;
@@ -678,7 +678,7 @@ void controlChange(byte channel, byte control, byte value)
     break;
   case 22: // Envelope 0 Sustain Scaling
     Voice.voiceData.sustainScale[0] = value;
-    Voice.Envelope[0]->setSustainTime(Voice.voiceData.sustainTime[0] * pow(10, value));
+    Voice.Envelope[0]->setSustainTime(Voice.voiceData.sustainTime[0] * pow(10, Voice.voiceData.sustainScale[0]));
     break;
   case 23: // Main Envelope Sustain Time
     Voice.voiceData.sustainTime[0] = value;
@@ -690,7 +690,7 @@ void controlChange(byte channel, byte control, byte value)
     break;
   case 25: // Envelope 0 Release Scaling
     Voice.voiceData.releaseScale[0] = value;
-    Voice.Envelope[0]->setReleaseTime(Voice.voiceData.releaseTime[0] * pow(10, value));
+    Voice.Envelope[0]->setReleaseTime(Voice.voiceData.releaseTime[0] * pow(10, Voice.voiceData.releaseScale[0]));
     break;
   case 26: // Envelope 0 Main Envelope Release Time
     Voice.voiceData.releaseTime[0] = value;
@@ -702,7 +702,7 @@ void controlChange(byte channel, byte control, byte value)
     break;
   case 28: // Envelope 1 Attack Scaling
     Voice.voiceData.attackScale[1] = value;
-    Voice.Envelope[1]->setAttackTime(Voice.voiceData.attackTime[1] * pow(10, value));
+    Voice.Envelope[1]->setAttackTime(Voice.voiceData.attackTime[1] * pow(10, Voice.voiceData.releaseScale[1]));
     break;
   case 29: // Envelope 1 Attack Time
     Voice.voiceData.attackTime[1] = value;
@@ -714,7 +714,7 @@ void controlChange(byte channel, byte control, byte value)
     break;
   case 31: // Envelope 1 Decay Scaling
     Voice.voiceData.decayScale[1] = value;
-    Voice.Envelope[1]->setDecayTime(Voice.voiceData.decayTime[1] * pow(10, value));
+    Voice.Envelope[1]->setDecayTime(Voice.voiceData.decayTime[1] * pow(10, Voice.voiceData.decayScale[1]));
     break;
   case 32: // Envelope 1 Decay Time
     Voice.voiceData.decayTime[1] = value;
@@ -726,7 +726,7 @@ void controlChange(byte channel, byte control, byte value)
     break;
   case 34: // Envelope 1 Sustain Scaling
     Voice.voiceData.sustainScale[1] = value;
-    Voice.Envelope[1]->setSustainTime(Voice.voiceData.sustainTime[1] * pow(10, value));
+    Voice.Envelope[1]->setSustainTime(Voice.voiceData.sustainTime[1] * pow(10, Voice.voiceData.sustainScale[1]));
     break;
   case 35: // Envelope 1 Sustain Time
     Voice.voiceData.sustainTime[1] = value;
@@ -738,7 +738,7 @@ void controlChange(byte channel, byte control, byte value)
     break;
   case 37: // Envelope 1 Release Scaling
     Voice.voiceData.releaseScale[1] = value;
-    Voice.Envelope[1]->setReleaseTime(Voice.voiceData.releaseTime[1] * pow(10, value));
+    Voice.Envelope[1]->setReleaseTime(Voice.voiceData.releaseTime[1] * pow(10, Voice.voiceData.releaseScale[1]));
     break;
   case 38: // Envelope 1 Release Time
     Voice.voiceData.releaseTime[1] = value;
@@ -750,7 +750,7 @@ void controlChange(byte channel, byte control, byte value)
     break;
   case 40: // Envelope 2 Attack Scaling
     Voice.voiceData.attackScale[2] = value;
-    Voice.Envelope[2]->setAttackTime(Voice.voiceData.attackTime[2] * pow(10, value));
+    Voice.Envelope[2]->setAttackTime(Voice.voiceData.attackTime[2] * pow(10, Voice.voiceData.attackScale[2]));
     break;
   case 41: // Envelope 2 Attack Time
     Voice.voiceData.attackTime[2] = value;
@@ -762,7 +762,7 @@ void controlChange(byte channel, byte control, byte value)
     break;
   case 43: // Envelope 2 Decay Scaling
     Voice.voiceData.decayScale[2] = value;
-    Voice.Envelope[2]->setDecayTime(Voice.voiceData.decayTime[2] * pow(10, value));
+    Voice.Envelope[2]->setDecayTime(Voice.voiceData.decayTime[2] * pow(10, Voice.voiceData.decayScale[2]));
     break;
   case 44: // Envelope 2 Decay Time
     Voice.voiceData.decayTime[2] = value;
@@ -774,7 +774,7 @@ void controlChange(byte channel, byte control, byte value)
     break;
   case 46: // Envelope 2 Sustain Scaling
     Voice.voiceData.sustainScale[2] = value;
-    Voice.Envelope[2]->setSustainTime(Voice.voiceData.sustainTime[2] * pow(10, value));
+    Voice.Envelope[2]->setSustainTime(Voice.voiceData.sustainTime[2] * pow(10, Voice.voiceData.sustainScale[2]));
     break;
   case 47: // Envelope 2 Sustain Time
     Voice.voiceData.sustainTime[2] = value;
@@ -786,7 +786,7 @@ void controlChange(byte channel, byte control, byte value)
     break;
   case 49: // Envelope 2 Release Scaling
     Voice.voiceData.releaseScale[2] = value;
-    Voice.Envelope[2]->setReleaseTime(Voice.voiceData.releaseTime[2] * pow(10, value));
+    Voice.Envelope[2]->setReleaseTime(Voice.voiceData.releaseTime[2] * pow(10, Voice.voiceData.releaseScale[2]));
     break;
   case 50: // Envelope 2 Release Time
     Voice.voiceData.releaseTime[2] = value;
