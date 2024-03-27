@@ -917,6 +917,7 @@ void controlChange(byte channel, byte control, byte value)
     break;
   case 77:
     Voice.voiceData.transpose = map(value, 0, 127, -24, 24);
+    Voice.setFreqs(Voice.pitch);
     break;
   case 78: // set Receive Channel
 #ifdef DEBUG_PRINT
